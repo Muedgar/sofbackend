@@ -1,6 +1,7 @@
 const User = require('../model/user');
 require("dotenv").config();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 
 // handle errors
@@ -47,7 +48,7 @@ const signup_post = async (req,res) => {
     try {
         const user = await User.create(req.body);
 
-        const token = createToken(user._id);
+        const token = createToken({id: user._id, email: user.email});
         // after creating a new user
         // create a jwt and send it in a cookie
         data = {user: user, jwt: token};
@@ -79,8 +80,9 @@ const login_post = async(req, res) => {
         const user = await User.login(email, password);
         // after creating a new user
         // create a jwt and send it in a cookie
-        const token = createToken({id: user._id, roles: user.roles});
+        const token = createToken({id: user._id, email: user.email});
         res.cookie('jwt', token, {httpOnly: true, maxAge: maxAge * 1000});
+        console.log("logged in");
         res.status(200).json({user, status: 'user logged in'});
     } catch (error) {
         const errors = handleErrors(error);
@@ -89,7 +91,69 @@ const login_post = async(req, res) => {
 }
 
 
+const getLoggedInUser = async (req,res) => {
+    try {
+        // res.clearCookie()
+        console.log(req.headers)
+        if(!req.headers.cookie) {
+            throw new Error("Not Logged in")
+        }
+        jwt.verify(req.headers.cookie.split("=")[1], process.env.JWT_SECRET, function(err, decodedToken) {
+            if(err) { throw new Error("Couldn't get user data") }
+            else {
+                res.status(200).json(decodedToken)  // Add to req object
+            }
+          });
+        
+        
+    } catch (error) {
+        res.status(400).json({"user": error.message});
+    }
+}
+
+const logout = async (req,res) => {
+    try {
+        if(!req.headers.cookie) {
+            throw new Error("Not Logged in")
+        }
+        res.status(200).clearCookie('jwt').json({message: 'user logged out'})
+    } catch (error) {
+        res.status(400).json({"user": error.message});
+    }
+}
+
+const changePassword = async (req,res) => {
+    try {
+        const salt = await bcrypt.genSalt();
+        let newpassword = await bcrypt.hash(req.body.password, salt);
+        await User.findOneAndUpdate({email: process.env.ADMIN_EMAIL},{password: newpassword},{new: true})
+        .then(d => {
+
+            res.status(200).json({message: "Password changed", d})
+        })
+        .catch(e => new Error("Password change failed"))
+    }catch (error) {
+        res.status(400).json({"user": error.message});
+    }
+}
+
+const clearUserTable = async (req,res) => {
+    try {
+        await User.deleteMany({})
+        .then(d => {
+            res.status(200).json({message: "User table cleared"})
+        })
+        .catch(e => new Error("User table clearing failed"))
+    }catch (error) {
+        res.status(400).json({"user": error.message});
+    }
+}
+
 module.exports = {
     signup_post,
-    login_post
+    login_post,
+    logout,
+    getLoggedInUser,
+    clearUserTable,
+    changePassword
 }
