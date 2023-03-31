@@ -9,7 +9,7 @@ const router = require("./api/router/sofarouter");
 
 const app = express();
 
-app.use(cors({credentials: true, origin:  'https://solight.herokuapp.com'}));
+app.use(cors({credentials: true, origin:  'http://admin.sofalightbusiness.com'}));
 app.use(express.json());
 
 app.use("/sofalight/backend/api", router);
