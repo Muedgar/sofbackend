@@ -7,6 +7,13 @@ const saveItems = async (req, res) => {
         }).catch(e => res.status(400).json({message: 'Bad Request'}))
 }
 
+const clearItems = async (req, res) => {
+    await Order.deleteMany({})
+        .then(d => {
+            res.status(201).json({message: 'order cleared'})
+        }).catch(e => res.status(400).json({message: 'Bad Request'}))
+}
+
 const getItems = async (req, res) => {
     await Order.find({})
         .then(d => {
@@ -28,16 +35,35 @@ const getItems = async (req, res) => {
                 result.push(daData.item_quantity)
                 result.push(da.orderInfo[1].user)
                 result.push(da.orderInfo[1].phone)
+                let dateArray = da.createdAt.toString().split(" ")
+                result.push(dateArray[0]+" "+dateArray[1]+" "+dateArray[2]+" "+dateArray[3])
+                result.push(da._id)
                 results.push(result)
             })
+            
            })
             res.status(201).json(results)
         }).catch(e => res.status(400).json({message: 'Bad Request'}))
 }
 
 
+const deleteOneItem = async (req, res) => {
+    let data = req.body;
+    try {
+        await data.forEach(async d => {
+            await Order.findOneAndDelete({_id: d.id})
+        })
+        res.status(201).json({message: "success"})
+    } catch (error) {
+        res.status(400).json({message: error.message})
+    }
+}
+
+
 
 module.exports = {
     saveItems,
-    getItems
+    getItems,
+    clearItems,
+    deleteOneItem
 }

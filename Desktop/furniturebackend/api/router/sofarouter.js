@@ -12,7 +12,8 @@ const {
 
 const {
 saveItems,
-getItems
+getItems,
+deleteOneItem
 } = require("../controller/cart");
 const { authorize } = require("../middleware/authorization");
 
@@ -27,6 +28,7 @@ router.put("/products/update/:id",authorize,updateProduct)
 // orders 
 router.post("/products/order", saveItems);
 router.get("/products/order",authorize, getItems);
+router.delete("/products/orders/deleteOne",authorize,deleteOneItem)
 
 router.get("/", (req,res) => {
     res.status(200).json({
