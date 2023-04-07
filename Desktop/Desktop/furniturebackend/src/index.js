@@ -3,9 +3,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-const dbSecrets = require("./config/secrets");
+const dbSecrets = require("../config/secrets");
 
-const router = require("./api/router/sofarouter");
+const router = require("../api/router/sofarouter");
 
 const app = express();
 
